@@ -1,0 +1,43 @@
+pipeline {
+   agent any/**{
+       label "${agent}"
+   }*/
+   
+   stages {
+        stage('CleanWorkspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout') {
+            steps {
+                /**sh '''
+                git clone https://github_user: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@github.com/Bhavyattn/task.git
+                '''*/
+                git branch: 'main', credentialsId: '12', url: 'git@github.com:Bhavyattn/taskecr.git'
+            }
+        }
+        stage('Building Image') {
+            steps {
+              sh '''
+                 pwd
+                 docker build -t myimg:${BUILD_NUMBER} .
+                 '''
+                }
+            }
+        
+        stage('Docker Push'){
+
+            steps {
+                
+                sh '''
+                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 055962463891.dkr.ecr.ap-south-1.amazonaws.com
+                #sudo su
+                docker tag myimg:${BUILD_NUMBER} 055962463891.dkr.ecr.ap-south-1.amazonaws.com/task:latest
+                docker push 055962463891.dkr.ecr.ap-south-1.amazonaws.com/task:latest
+                '''
+            }
+        }
+        
+   }
+} 
